@@ -106,7 +106,7 @@ public class TabMia extends TableLayout{
 		ArrayList<Coppia> toGo=new ArrayList<Coppia>();
 		Random random = new Random();
 		//scegli città
-		int posCitta=randomize(0, 20, random);
+		int posCitta=randomize(0, 19, random);
 		String citta=nomeCapoluoghi.get(posCitta);
 		char[] explodeCitta=citta.toCharArray();
 
@@ -134,13 +134,15 @@ public class TabMia extends TableLayout{
 		//displacement delle altre explodeCitta.length-3 cifre 
 		for (int i=2;i<explodeCitta.length;i++){
 			indexToGo=randomize(0,boundary.size()-1,random);
+			if (boundary.size()==0)
+				indexToGo=indexToGo+0;
 			cellToGo=(Coppia) boundary.get(indexToGo);
 			displacement.add(cellToGo);
 			boundary.clear();
 			boundary=boundaryCells(cellToGo);
 			boundary=eliminaCelleNulle(boundary);
 			boundary=eliminaCelleInDisplacement(boundary,displacement);
-			if ((i>2) && (explodeCitta.length-i)>1){
+			if ((i+1)<(explodeCitta.length-1)){
 				boundary=eliminaCelleIsolate(boundary,displacement);	
 			}
 		}
@@ -216,7 +218,7 @@ public class TabMia extends TableLayout{
 			segnale=true;
 			for(int j=0;j<boundaryBound.size() && segnale;j++){
 				Coppia xybounded=boundaryBound.get(j);
-				if (xybounded.getX()==0 && xybounded.getY()==0){
+				if (indexPosizioniArray[(int) xybounded.getX()][(int) xybounded.getY()]==0){
 					segnale=true;
 				}
 				else{
