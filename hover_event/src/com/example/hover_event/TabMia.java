@@ -8,17 +8,23 @@ import java.util.Random;
 import android.view.ViewParent;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TableLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class TabMia extends TableLayout{
+	
+	private boolean firstTime=true;
 	
 	private enum Posizioni{
 		LD,LU,RD,RU
@@ -41,20 +47,27 @@ public class TabMia extends TableLayout{
 			return y;
 		}
 	}
-	
+	//mappa definisce i button che un certo button può toccare
 	private HashMap<Integer,ArrayList<Button>> mappa;
+	
 	private ArrayList<Integer> percorso=null;
 	private ArrayList<Button> buttons=null;
+	private TextView textCitta=null;
 	private HashMap<Integer,HashMap<Posizioni,Coppia>> dimButton;
 	private HashMap<Integer,Button> chiaveBottone;
 	private Boolean dimButtonSet=false;
 	private String capoluogo=new String("");
-	private Context activityContext;
-	private Drawable colorBase;
+	private Context activityContext=null;
 	private ArrayList<String> nomeCapoluoghi;
+	//matriceDisplacement viene utilizzata per individuare le celle occupate o meno
+	private Boolean matriceDisplacement[][]=new Boolean[4][4];
+	private static String MESSAGE_CAPOLUOGO="MESSAGE_CAPOLUOGO";
 	
 	private int[][] indexPosizioniArray=new int[6][6]; 
 	private HashMap<Integer,Coppia> chiavePiano=new HashMap<Integer,Coppia>();
+	
+	//26 lettere
+	private String[] Lettere={"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"};
 	
 	public TabMia(Context context){
 		super(context);
@@ -65,8 +78,9 @@ public class TabMia extends TableLayout{
         assegnaCapoluoghi();
         
         riempiIndexArray();
-		
+        	
 		displaceCapoluogo();
+
 	}
 	
 	private void inflateLayout(Context context) {
@@ -74,6 +88,7 @@ public class TabMia extends TableLayout{
 		View view = layoutInflater.inflate(R.layout.activity_main, this); 
 		invalidate();
 		buttons=this.bundleButtons(view);
+		textCitta=(TextView) view.findViewById(R.id.citta);
 		mappa=this.creaMappa(view);
 	}
 	
@@ -103,7 +118,6 @@ public class TabMia extends TableLayout{
 	
 	private void displaceCapoluogo(){
 		ArrayList<Coppia> displacement=new ArrayList<Coppia>();
-		ArrayList<Coppia> toGo=new ArrayList<Coppia>();
 		Random random = new Random();
 		//scegli città
 		int posCitta=randomize(0, 19, random);
@@ -143,13 +157,16 @@ public class TabMia extends TableLayout{
 			boundary=eliminaCelleNulle(boundary);
 			boundary=eliminaCelleInDisplacement(boundary,displacement);
 			if ((i+1)<(explodeCitta.length-1)){
-				boundary=eliminaCelleIsolate(boundary,displacement);	
+				boundary=eliminaCelleIsolate(boundary,displacement,(explodeCitta.length-i));	
 			}
 		}
-		
+		//
+			resetMatrice();
+		//
 		//ho creato il displacement ora lo piazzo
 		for (int i=0;i<displacement.size();i++){
 			Coppia disp=displacement.get(i);
+			matriceDisplacement[(int) (disp.getX()-1)][(int) (disp.getY()-1)]=true;
 			if (disp.getX()==1 && disp.getY()==1){
 				buttons.get(0).setText((String.valueOf(explodeCitta[i])));}
 			if (disp.getX()==1 && disp.getY()==2){
@@ -184,6 +201,31 @@ public class TabMia extends TableLayout{
 				buttons.get(15).setText((String.valueOf(explodeCitta[i])));}
 		}
 		
+		//riempimento celle non occupate
+		for (int i=0;i<4;i++){
+			for (int j=0;j<4;j++){
+				if (!matriceDisplacement[i][j]){
+					buttons.get(i*4+j).setText(randomLettera(random));
+				}
+			}
+		}
+		
+		if (firstTime)
+			Toast.makeText(activityContext, "Qual è il capoluogo italiano nascosto?", Toast.LENGTH_LONG).show();
+		firstTime=false;
+	}
+	
+	private String randomLettera(Random r){
+		int indexLettera=randomize(0,25,r);
+		return Lettere[indexLettera];
+	}
+	
+	private void resetMatrice(){
+		for (int i=0;i<4;i++){
+			for (int j=0;j<4;j++){
+				matriceDisplacement[i][j]=false;
+			}
+		}
 	}
 	
 	private ArrayList<Coppia> eliminaCelleInDisplacement(ArrayList<Coppia> boundary,ArrayList<Coppia> displacement){
@@ -208,10 +250,19 @@ public class TabMia extends TableLayout{
 	}
 	
 	//il seguente metodo elimina elementi dall'array passato
-	private ArrayList<Coppia> eliminaCelleIsolate(ArrayList<Coppia> boundary,ArrayList<Coppia> displacement){
+	//INPUT: boundary sono le celle in cui è possibile muoversi, displacement è il displace scelto finora, toPosix indica il numero di lettere che rimangono da posizionare
+	private ArrayList<Coppia> eliminaCelleIsolate(ArrayList<Coppia> boundary,ArrayList<Coppia> displacement, int toPosix){
 		boolean segnale=true;
 		int dim=boundary.size();
 		ArrayList<Coppia> toReturn=new ArrayList<Coppia>();
+		
+		//caso base non ho più lettere da schierare
+		if (toPosix==0){
+			boundary.clear();
+			toReturn.add(new Coppia(1,1));
+			return toReturn;
+		}
+		else{
 		for(int i=0;i<dim;i++){
 			Coppia xybound=boundary.get(i);
 			ArrayList<Coppia> boundaryBound=boundaryCells(xybound);
@@ -232,11 +283,29 @@ public class TabMia extends TableLayout{
 			}
 			
 			if (!segnale){
-				toReturn.add(xybound);
+				//la cella xybound è un possibile candidato dato che ha almeno una cella da cui continuare il displacement
+				//ora vedo se esiste dalla cella xybound un percorso di almeno toPosix celle
+				ArrayList<Coppia> newDisplace=deepCopy(displacement);
+				newDisplace.add(xybound);
+				ArrayList<Coppia> newBoundary=boundaryCells(xybound);
+				newBoundary=eliminaCelleNulle(newBoundary);
+				newBoundary=eliminaCelleInDisplacement(newBoundary,newDisplace);
+				newBoundary=eliminaCelleIsolate(newBoundary,newDisplace,toPosix-1);
+				if (newBoundary.size()!=0)
+					toReturn.add(xybound);
 			}
 		}
 		boundary.clear();
 		return toReturn;
+		}
+	}
+	
+	private ArrayList<Coppia> deepCopy(ArrayList<Coppia> displacement){
+		ArrayList<Coppia> newDisplace=new ArrayList<Coppia>();
+		for (int i=0;i<displacement.size();i++){
+			newDisplace.add(new Coppia(displacement.get(i).getX(),displacement.get(i).getY()));
+		}
+		return newDisplace;
 	}
 	
 	private boolean inDisplacement(Coppia xy,ArrayList<Coppia> displacement){
@@ -343,10 +412,17 @@ public class TabMia extends TableLayout{
             catch (ClassCastException e){parent=null;}
             }
             HashMap<Posizioni,Coppia> size=new HashMap<Posizioni,Coppia>();
+            /*
             Coppia ld=new Coppia(left,top);
             Coppia lu=new Coppia(left,Math.abs(top-buttons.get(i).getHeight()));
             Coppia rd=new Coppia(left+buttons.get(i).getWidth(),top);
             Coppia ru=new Coppia(left+buttons.get(i).getWidth(),Math.abs(top-buttons.get(i).getHeight()));
+            */
+            Coppia ld=new Coppia(left,top+(buttons.get(i).getHeight()/2));
+            Coppia lu=new Coppia(left,Math.abs(top-(buttons.get(i).getHeight()/2)));
+            Coppia rd=new Coppia(left+buttons.get(i).getWidth(),top+(buttons.get(i).getHeight()/2));
+            Coppia ru=new Coppia(left+buttons.get(i).getWidth(),Math.abs(top-(buttons.get(i).getHeight()/2)));
+
             size.put(Posizioni.LD,ld);
             size.put(Posizioni.LU,lu);
             size.put(Posizioni.RD,rd);
@@ -375,11 +451,12 @@ public class TabMia extends TableLayout{
 			for (int j=0;j<buttons.size() && segnale;j++){
 				if (isCovered(dimButton.get(buttons.get(j).getId()),pt)){
 					segnale=false;
-					buttons.get(j).setBackgroundColor(Color.GREEN);
+					buttons.get(j).setBackgroundResource(R.drawable.mybuttontouch);
 					percorso=new ArrayList<Integer>();
 					percorso.add(buttons.get(j).getId());
 					String conc=new String((String) buttons.get(j).getText());
 					capoluogo=capoluogo + conc;
+					textCitta.setText(capoluogo);
 					invalidate();
 				}
 			}
@@ -402,10 +479,11 @@ public class TabMia extends TableLayout{
 							if (visit.equals(buttons.get(j).getId())) segnaleVisit=true;
 						}
 						if (segnaleVisit && !inPercorso(buttons.get(j).getId())){
-							buttons.get(j).setBackgroundColor(Color.GREEN);
+							buttons.get(j).setBackgroundResource(R.drawable.mybuttontouch);
 							percorso.add(buttons.get(j).getId());
 							String conc=new String((String) buttons.get(j).getText());
 							capoluogo=capoluogo + conc;
+							textCitta.setText(capoluogo);
 							invalidate();
 						}
 					}
@@ -415,20 +493,43 @@ public class TabMia extends TableLayout{
 			return true;
 
 		case (MotionEvent.ACTION_UP):
-			/*
 			if (percorso!=null){
-				for (int i=0;i<percorso.size();i++){
-					Button butt=chiaveBottone.get(percorso.get(i));
-					butt.setBackground(colorBase);
+				
+				//controllo se la parola inserita è una parola corretta
+				boolean shot=false;
+				for (int i=0;i<nomeCapoluoghi.size() && !shot;i++){
+					if (capoluogo.equals(nomeCapoluoghi.get(i)))
+						shot=true;
 				}
-			}*/
-			/*
-			if (percorso!=null){
-			percorso.clear();
-			Toast.makeText(activityContext, capoluogo, Toast.LENGTH_SHORT).show();
-			capoluogo=new String("");*/
+				//shot=true => capoluogo trovato
+				if (shot){
+				    Intent intent = new Intent(activityContext, Video.class);
+				    intent.putExtra(MESSAGE_CAPOLUOGO, capoluogo);
+					activityContext.startActivity(intent);
+						for (int i=0;i<percorso.size();i++){
+							Button butt=chiaveBottone.get(percorso.get(i));
+							butt.setBackgroundResource(R.drawable.mybutton);
+						}
+						percorso.clear();
+						percorso=null;
+						capoluogo=new String("");
+						displaceCapoluogo();
+					
+				}
+				else{
+					for (int i=0;i<percorso.size();i++){
+						Button butt=chiaveBottone.get(percorso.get(i));
+						butt.setBackgroundResource(R.drawable.mybutton);
+					}
+					percorso.clear();
+					percorso=null;
+					capoluogo=new String("");
+				}
+			}
+			capoluogo=new String("");
+			//capoluogo contiene la stringa
+
 			return true;
-			//}
 		}
 
 		return true;
@@ -450,8 +551,9 @@ public class TabMia extends TableLayout{
 	}
 	
 	private boolean isCovered(HashMap<Posizioni,Coppia> sizes,Coppia pt){
-		/*
+		
 		//use for debugging, getting values
+		/*
 		float ldx=sizes.get(Posizioni.LD).getX();
 		float ldy=sizes.get(Posizioni.LD).getY();
 		float rdx=sizes.get(Posizioni.RD).getX();
@@ -493,7 +595,6 @@ public class TabMia extends TableLayout{
 		for (int j=0;j<b.size();j++){
 			chiaveBottone.put(b.get(j).getId(), b.get(j));
 		}
-		colorBase=((Button) v.findViewById(R.id.b1)).getBackground();
 		return b;
 	}
 	

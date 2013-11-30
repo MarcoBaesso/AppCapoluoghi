@@ -1,0 +1,87 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:background="#65b4ff"
+    > 
+<TableLayout
+		android:layout_marginTop="50dp"
+        android:layout_height="match_parent"
+        android:id="@+id/TableVideo"
+        android:layout_width="match_parent">
+<TableRow 
+	android:layout_height="wrap_content"
+    android:id="@+id/TableRowVideo1"
+    android:layout_width="wrap_content"
+    android:paddingTop="25dp"
+    android:paddingBottom="10dp"
+    android:gravity="center"
+    >
+    <TextView
+            android:id="@+id/congratulazioni"
+    		android:layout_height="wrap_content"
+    		android:layout_width="fill_parent"
+    		android:textStyle="bold"
+   			android:textSize="15dp"
+    		android:text="Congratulazioni!"
+    		android:gravity="center"> 
+    </TextView>
+</TableRow>    
+<TableRow 
+	android:layout_height="wrap_content"
+    android:id="@+id/TableRowVideo2"
+    android:layout_width="wrap_content"
+    android:paddingBottom="10dp"
+    android:gravity="center"
+    >
+    <TextView
+            android:id="@+id/complimenti"
+    		android:layout_height="wrap_content"
+    		android:layout_width="fill_parent"
+   			android:textSize="15dp"
+   			android:textStyle="italic"
+    		android:text="Hai indovinato il capoluogo"
+    		android:gravity="center"> 
+    </TextView>
+</TableRow>
+<TableRow 
+	android:layout_height="wrap_content"
+    android:id="@+id/TableRowVideo3"
+    android:layout_width="wrap_content"
+    android:paddingBottom="10dp"
+    android:paddingTop="40dp"
+    android:gravity="center"
+    >
+    <TextView
+            android:id="@+id/capoluogoIndovinato"
+    		android:layout_height="wrap_content"
+    		android:layout_width="fill_parent"
+   			android:textSize="15dp"
+   			android:textStyle="italic|bold"
+    		android:text="nome capoluogo"
+    		android:gravity="center"> 
+    </TextView>
+</TableRow>
+<TableRow 
+	android:layout_height="wrap_content"
+    android:id="@+id/TableRowVideo4"
+    android:layout_width="wrap_content"
+    android:paddingBottom="10dp"
+    android:gravity="center"
+    >
+    <Button
+            android:id="@+id/link"
+    		android:layout_height="wrap_content"
+    		android:layout_width="fill_parent"
+   			android:textSize="15dp"
+   			android:focusable="true"
+   			android:background="@drawable/mybuttontouch"
+    		android:text="Visualizza video"
+    		android:clickable="true"
+    		android:gravity="center"> 
+    </Button>
+</TableRow>
+</TableLayout>    
+</LinearLayout>
