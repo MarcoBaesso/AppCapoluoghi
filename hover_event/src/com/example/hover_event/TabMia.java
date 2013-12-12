@@ -3,16 +3,9 @@ package com.example.hover_event;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
-
-
-import android.view.ViewParent;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -64,7 +57,6 @@ public class TabMia extends TableLayout{
 	private static String MESSAGE_CAPOLUOGO="MESSAGE_CAPOLUOGO";
 	
 	private int[][] indexPosizioniArray=new int[6][6]; 
-	private HashMap<Integer,Coppia> chiavePiano=new HashMap<Integer,Coppia>();
 	
 	//26 lettere
 	private String[] Lettere={"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"};
@@ -202,6 +194,7 @@ public class TabMia extends TableLayout{
 		}
 		
 		//riempimento celle non occupate
+		
 		for (int i=0;i<4;i++){
 			for (int j=0;j<4;j++){
 				if (!matriceDisplacement[i][j]){
@@ -211,7 +204,7 @@ public class TabMia extends TableLayout{
 		}
 		
 		if (firstTime)
-			Toast.makeText(activityContext, "Qual è il capoluogo italiano nascosto?", Toast.LENGTH_LONG).show();
+			Toast.makeText(activityContext, "Qual è il capoluogo italiano nascosto?", Toast.LENGTH_SHORT).show();
 		firstTime=false;
 	}
 	
@@ -394,9 +387,9 @@ public class TabMia extends TableLayout{
 		}
 	}
 	
+	@SuppressLint("UseSparseArrays")
 	public void setSizeButtons(){
 		HashMap<Integer,HashMap<Posizioni,Coppia>> mapButtons=new HashMap<Integer,HashMap<Posizioni,Coppia>>();
-		HashMap<Posizioni,Coppia> mapDim=new HashMap<Posizioni,Coppia>();
 		
 		for (int i=0;i<buttons.size();i++){
     		View target = buttons.get(i);
@@ -573,6 +566,7 @@ public class TabMia extends TableLayout{
 		return false;
 	}
 	
+	@SuppressLint("UseSparseArrays")
 	private ArrayList<Button> bundleButtons(View v){
 		ArrayList<Button> b=new ArrayList<Button>();
 		chiaveBottone=new HashMap<Integer,Button>();
